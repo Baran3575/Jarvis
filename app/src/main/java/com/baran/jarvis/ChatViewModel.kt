@@ -85,15 +85,17 @@ class ChatViewModel : ViewModel() {
         _status.value = null
     }
 
-    private fun load(): List<Message> = try {
+    private fun load(): List<Message> {
         if (!file.exists()) return emptyList()
-        val arr = JSONArray(file.readText())
-        List(arr.length()) { i ->
-            val o = arr.getJSONObject(i)
-            Message(o.getString("t"), o.getBoolean("u"))
+        return try {
+            val arr = JSONArray(file.readText())
+            List(arr.length()) { i ->
+                val o = arr.getJSONObject(i)
+                Message(o.getString("t"), o.getBoolean("u"))
+            }
+        } catch (_: Exception) {
+            emptyList()
         }
-    } catch (_: Exception) {
-        emptyList()
     }
 
     private fun save() {
