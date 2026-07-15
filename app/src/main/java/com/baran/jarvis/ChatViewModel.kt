@@ -34,8 +34,16 @@ class ChatViewModel : ViewModel() {
     fun send(text: String) {
         val t = text.trim()
         if (t.isBlank() || _busy.value) return
-        // Requirement: open Termux if it is closed.
-        TermuxSession.openTermux()
+        if (!TermuxSession.hasRunPermission()) {
+            _messages.value = _messages.value + Message(
+                "Termux RUN_COMMAND izni verilmedi. Üstteki 'İzni Aç (Ayarlar)' " +
+                    "butonuyla izni etkinleştir, sonra tekrar dene.",
+                false
+            )
+            return
+        }
+        // Komut arka planda calisir (EXTRA_BACKGROUND=true); Termux UI'su acilmaz.
+        // Termux hizmeti kapali olsa bile RUN_COMMAND servisi uyanir.
         viewModelScope.launch(Dispatchers.IO) {
             _busy.value = true
             _messages.value = _messages.value + Message(t, true)

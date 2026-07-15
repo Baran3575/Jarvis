@@ -26,17 +26,26 @@ Jarvis'in çalışması için telefonunda şunlar gerekiyor:
 F-Droid'ten `Termux` ve `Termux:API` uygulamalarını kur.
 Play Store'daki Termux eski; F-Droid veya GitHub releases kullan.
 
-### 2. Termux dış uygulama izni
-Termux içinde:
+### 2. Termux dış uygulama izni (ZORUNLU)
+Bu ayar olmadan Jarvis `Not allowed to start service Intent ... without
+permission com.termux.permission.RUN_COMMAND` hatası verir. Termux içinde:
 ```bash
 echo "allow-external-apps = true" >> ~/.termux/termux.properties
+termux-setup-storage   # isteğe bağlı
+killall termux         # ayarı uygulamak için Termux'u tam kapat-aç
 ```
-Sonra Termux'u tamamen kapat-aç (veya `killall termux`).
+> `allow-external-apps = true` YOKSA Termux dış uygulamalardan gelen komutları
+> tamamen reddeder; bu izin hatasının en yaygın sebebidir.
 
 ### 3. Jarvis'e RUN_COMMAND izni ver
 Android'de: **Ayarlar → Uygulamalar → Jarvis → İzinler** ve
 "Termux'ta komut çalıştır" (run commands in Termux) iznini etkinleştir.
 (Bu izin manifest'te tanımlı; kullanıcının elle vermesi gerekir.)
+
+> İpucu: Termux **Jarvis'ten ÖNCE** kurulduysa bu izin bazen otomatik gelir.
+> Jarvis'ten sonra kurulduysa izni elle ver veya Jarvis'i yeniden kur.
+> İznin durumu uygulama içinde **Durum** butonuyla ve mesaj gönderince
+> otomatik kontrol edilir; eksikse üstte "İzni Aç (Ayarlar)" butonu çıkar.
 
 ### 4. proot Ubuntu
 Termux içinde:
@@ -75,8 +84,10 @@ opencode'u `opencode` olarak PATH'te göründüğünden emin ol
 > Farkli model istersen ya bu sabiti ya da yukaridaki `opencode.jsonc` model alanini degistir.
 
 ### 5. Çalıştır
-Jarvis'i aç, mesaj yaz. İlk mesajda Termux otomatik açılır.
-Üstteki **Durum** butonu kurulumu doğrular (Termux, izin, opencode yolu).
+Jarvis'i aç, mesaj yaz. Komut **arka planda** çalışır — Termux penceresi
+açılmaz (RUN_COMMAND `EXTRA_BACKGROUND=true` ile gönderilir). İstersen üstteki
+**Termux** butonuyla elle açabilirsin. **Durum** butonu kurulumu doğrular
+(Termux, izin, opencode yolu).
 
 ## Nasıl çalışır
 - `ChatViewModel.send()` → `OpencodeCommand.build(msg)` bir shell komutu üretir:
