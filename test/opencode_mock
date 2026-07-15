@@ -1,0 +1,44 @@
+#!/bin/bash
+# Sahte "opencode run --continue -- <prompt>" beyni.
+# Gercek bir model gerektirmez; ama:
+#   - kabuk argumanlarini (-- sonrasi) dogru toplar,
+#   - basit bir "hafiza" tutar (memory.md),
+#   - --continue davranisini taklit eder (ayni oturumu surdurur),
+#   - ciktiya ANSI renk kodu basar (parse fallback testi icin).
+set -u
+
+msg=""
+capture=0
+for a in "$@"; do
+    if [ "$a" = "--" ]; then capture=1; continue; fi
+    if [ "$capture" -eq 1 ]; then msg="$msg$a "; fi
+done
+msg="${msg% }"
+
+JARVIS="$HOME/jarvis"
+MEM="$JARVIS/memory.md"
+mkdir -p "$JARVIS"
+
+# "adim X" / "ismim X" gibi ifadeyi hafizaya al
+if printf '%s' "$msg" | grep -qiE 'adim|adım|ismim|benim ad'; then
+    name=$(printf '%s' "$msg" | grep -oiE '(adim|adım|ismim) [A-Za-z]+' | head -1 | awk '{print $2}')
+    if [ -n "$name" ]; then
+        touch "$MEM"
+        if ! grep -q "sahip: $name" "$MEM"; then
+            printf '\n# Hafiza\n- sahip: %s\n' "$name" >> "$MEM"
+        fi
+    fi
+fi
+
+# ANSI renkli cikti (Gercek opencode text modu gibi)
+printf '\033[36mJarvis:\033[0m '
+if [ -f "$MEM" ]; then
+    saved=$(grep -i 'sahip:' "$MEM" | head -1 | sed 's/.*sahip: //')
+    if [ -n "$saved" ]; then
+        printf 'Merhaba %s, sana nasil yardimci olabilirim?\n' "$saved"
+    else
+        printf 'Merhaba, nasil yardimci olabilirim?\n'
+    fi
+else
+    printf 'Merhaba, nasil yardimci olabilirim?\n'
+fi
